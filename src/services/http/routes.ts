@@ -12,18 +12,18 @@ export async function constructRoutes(
     try {
       logger.info('📥 Received request', { body: req.body });
 
-      const body = (req.body as unknown as { message: string, phonenumber: string });
-      if (!body.phonenumber || !body.message) {
+      const body = (req.body as unknown as { message: string, to: string });
+      if (!body.to || !body.message) {
         logger.warn('Missing required fields');
         return reply.status(400).send({
           status: "fail",
-          message: "Missing phonenumber or messsage",
-          err: "Phonenumber and message are required!"
+          message: "Missing 'to' or 'messsage' fields",
+          err: "Missing required fields!"
         });
       }
 
-      const { phonenumber, message } = body;
-      await publishMessage(phonenumber, message);
+      const { to, message } = body;
+      await publishMessage(to, message);
       return { status: 'queued' };
     } catch (error) {
       logger.error('❌ Error processing request:', error);

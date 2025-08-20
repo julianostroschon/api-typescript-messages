@@ -5,3 +5,4 @@ export const packageInfo = Object.freeze({
   name: pkg.name
 })
 
+console.log({ packageInfo })

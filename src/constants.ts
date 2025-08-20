@@ -1,5 +1,6 @@
 import { packageInfo } from "./infra/";
-const [API_VERSION] = packageInfo.version.split(".");
+console.log({ packageInfo })
+const [API_VERSION] = packageInfo?.version.split(".");
 
 const URL_PREFIX = `/api/v${API_VERSION}/`;
 const PROJECT_NAME = packageInfo.name;

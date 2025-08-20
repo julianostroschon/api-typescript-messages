@@ -6,7 +6,7 @@ import { consumer } from './constants';
 const logger = parentLogger.child({ service: 'consumer-rabbit' });
 
 interface MessageContent {
-  phonenumber: string;
+  to: string;
   message: string;
 }
 
@@ -25,17 +25,17 @@ export async function startRabbitConsumer() {
     if (message) {
       try {
         const content = JSON.parse(message.content.toString()) as MessageContent;
-        if (!content.phonenumber || !content.message) {
+        if (!content.to || !content.message) {
           logger.error(`❌ Mensagem inválida recebida`, { content });
           return channel.nack(message, false, false);
         }
 
         logger.info(`📥 Processando mensagem`, {
-          phonenumber: content.phonenumber,
+          to: content.to,
           messageLength: content.message.length
         });
 
-        const body = { to: content.phonenumber, message: content.message }
+        const body = { to: content.to, message: content.message }
         await sendMessage(MessageServices.Telegram, body);
 
         channel.ack(message);

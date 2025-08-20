@@ -6,10 +6,6 @@ import { producer } from './constants';
 let producerChannel: Channel;
 const logger = parentLogger.child({ service: 'producer' });
 
-interface MessageContent {
-  phonenumber: string;
-  message: string;
-}
 
 export async function startRabbitProducer(): Promise<Channel> {
   const consumerTag = producer.tag();
@@ -25,20 +21,20 @@ export async function startRabbitProducer(): Promise<Channel> {
   channel.consume(producer.queue, async (consumeMessage: ConsumeMessage | null): Promise<void> => {
     if (consumeMessage) {
       try {
-        const content = JSON.parse(consumeMessage.content.toString()) as MessageContent;
-        const { phonenumber, message } = content
+        const content = JSON.parse(consumeMessage.content.toString());
+        const { to, message } = content
 
-        if (!phonenumber || !message) {
+        if (!to || !message) {
           logger.error(`❌ Mensagem recebida inválida`, { content });
           return channel.nack(consumeMessage, false, false);
         }
 
         logger.info(`📥 Processando mensagem`, {
-          phonenumber: phonenumber,
+          to: to,
           messageLength: message.length
         });
 
-        await publishMessage(phonenumber, message);
+        await publishMessage(to, message);
 
         channel.ack(consumeMessage);
 
@@ -56,12 +52,12 @@ export async function startRabbitProducer(): Promise<Channel> {
 
   return channel;
 }
-export async function publishMessage(phonenumber: string, message: string): Promise<void> {
+export async function publishMessage(to: string, message: string): Promise<void> {
   if (!producerChannel) {
     await startRabbitProducer()
   }
 
-  const content = Buffer.from(JSON.stringify({ phonenumber, message }));
+  const content = Buffer.from(JSON.stringify({ to, message }));
 
   try {
     const success = producerChannel.publish(consumer.exchange, cfg.ROUTINE_NEW_MESAGE, content, {
@@ -71,11 +67,11 @@ export async function publishMessage(phonenumber: string, message: string): Prom
     if (success) {
       logger.info(`📤 Mensagem enviada para exchange "${consumer.exchange}"`, {
         messageLength: message.length,
-        phonenumber,
+        to,
       });
       return
     }
-    logger.warn(`⚠️ Mensagem não foi confirmada pelo RabbitMQ`, { phonenumber });
+    logger.warn(`⚠️ Mensagem não foi confirmada pelo RabbitMQ`, { to });
   } catch (error) {
     logger.error(`❌ Erro ao enviar mensagem para exchange:`, error);
     throw error;
