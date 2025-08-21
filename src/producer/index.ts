@@ -1,7 +1,6 @@
-import 'module-alias/register';
-import { parentLogger } from '../infra/logger';
-import { buildFastify, cleanupTelegramBot } from '../services';
-import { setupGracefulShutdown } from '../utils/shutdown';
+import { parentLogger } from '@/infra';
+import { buildFastify } from '@/services';
+import { setupGracefulShutdown } from '@/utils';
 import { startRabbitProducer } from './rabbit';
 
 const logger = parentLogger.child({ service: 'producer-app' });
@@ -20,9 +19,6 @@ async function main(): Promise<void> {
       logger.info('Closing Fastify server...');
       await app.close();
     },
-    async (): Promise<void> => {
-      cleanupTelegramBot();
-    }
   ]);
 }
 

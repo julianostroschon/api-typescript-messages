@@ -1,4 +1,4 @@
-import { buildConsumerTag } from "../services"
+import { buildConsumerTag } from "@/services"
 
 export const consumer = {
   queue: 'submit-messages',

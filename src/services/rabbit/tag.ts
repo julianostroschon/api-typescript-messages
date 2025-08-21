@@ -1,5 +1,5 @@
-import { packageInfo } from "../../infra/";
-import { parseDate } from "../../utils/date";
+import { packageInfo } from "@/infra";
+import { parseDate } from "@/utils";
 
 export function buildConsumerTag(queue: string): string {
   const appVersion = packageInfo.version ?? 'v?';

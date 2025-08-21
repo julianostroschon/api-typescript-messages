@@ -1,4 +1,4 @@
-import { sendTelegramMessage } from "./telegram";
+import { sendTelegramMessage } from "../telegram";
 
 export enum MessageServices {
   Telegram = 'TELEGRAM'

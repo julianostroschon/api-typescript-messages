@@ -1,5 +1,6 @@
 import fastify, { FastifyInstance } from "fastify";
-import { cfg, parentLogger } from "../../infra/";
+
+import { cfg, parentLogger } from "@/infra";
 import { constructRoutes } from "./routes";
 
 export async function buildFastify(): Promise<FastifyInstance> {

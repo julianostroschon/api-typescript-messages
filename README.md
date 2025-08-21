@@ -27,7 +27,7 @@ curl --request POST \
   --url http://localhost:3005/api/v1/send \
   --header 'Content-Type: application/json' \
   --data '{
-	"phonenumber": "<chatId>",
+	"to": "<chatId>",
 	"message": "Mensagem via API Messages."
 }'
 ```

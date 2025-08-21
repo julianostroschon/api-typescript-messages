@@ -1,6 +1,5 @@
-import 'module-alias/register';
-import { parentLogger } from '../infra/logger';
-import { setupGracefulShutdown } from '../utils/shutdown';
+import { parentLogger } from '@/infra';
+import { setupGracefulShutdown } from '@/utils';
 import { startRabbitConsumer } from './rabbit';
 
 const logger = parentLogger.child({ service: 'consumer' });

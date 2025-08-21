@@ -1,7 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { Logger } from "winston";
-import { URL_PREFIX } from "../../constants";
-import { publishMessage } from "../../producer/rabbit";
+
+import { URL_PREFIX } from "@/constants";
+import { publishMessage } from "@/producer/rabbit";
 
 export async function constructRoutes(
   app: FastifyInstance,

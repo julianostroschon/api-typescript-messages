@@ -1,5 +1,6 @@
 import TelegramBot, { ConstructorOptions, Message, SendMessageOptions } from 'node-telegram-bot-api';
-import { cfg, parentLogger } from '../../infra/';
+
+import { cfg, parentLogger } from '@/infra';
 
 const logger = parentLogger.child({ service: 'telegram' });
 const options: SendMessageOptions = { parse_mode: 'Markdown' };
@@ -20,7 +21,7 @@ function initBot(): TelegramBot {
   return new TelegramBot(cfg.TELEGRAM_TOKEN, botOptions);
 }
 
-export function getBot(): TelegramBot {
+function getBot(): TelegramBot {
   if (!bot) {
     bot = initBot()
 

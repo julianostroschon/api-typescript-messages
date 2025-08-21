@@ -1,6 +1,7 @@
 import { connect, type ConsumeMessage } from 'amqplib';
-import { cfg, parentLogger } from '../infra/';
-import { MessageServices, sendMessage } from '../services/messages';
+
+import { cfg, parentLogger } from '@/infra';
+import { MessageServices, sendMessage } from '@/services';
 import { consumer } from './constants';
 
 const logger = parentLogger.child({ service: 'consumer-rabbit' });
