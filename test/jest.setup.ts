@@ -1,7 +1,8 @@
 import { config } from 'dotenv';
+import { resolve } from 'path';
 
 // Carrega as variáveis de ambiente de teste
-config({ path: '../.env.test' });
+config({ path: resolve(__dirname, '../.env.test') });
 
 // Configuração global para timeouts
 jest.setTimeout(30000);

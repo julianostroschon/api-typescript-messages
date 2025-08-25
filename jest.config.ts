@@ -1,10 +1,6 @@
-import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import type { JestConfigWithTsJest } from 'ts-jest';
-import { pathsToModuleNameMapper } from 'ts-jest';
 
-// Read the tsconfig.json file synchronously and parse it
-const tsconfig = JSON.parse(readFileSync('./tsconfig.json', 'utf8'));
 const root = resolve(__dirname);
 
 const jestConfig: JestConfigWithTsJest = {
@@ -13,11 +9,14 @@ const jestConfig: JestConfigWithTsJest = {
   testMatch: ["<rootDir>/test/**/*.test.ts"],
   testEnvironment: "node",
   clearMocks: true,
-  // Use the specific ESM preset for consistency
-  preset: "ts-jest/presets/default-esm",
+  // Use the specific preset for consistency
+  preset: "ts-jest",
 
-  // Use pathsToModuleNameMapper to generate the mapping correctly
-  moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, { prefix: '<rootDir>/' }),
+  // Configuração explícita dos alias para garantir que funcionem nos testes
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@test/(.*)$': '<rootDir>/test/$1'
+  },
 
   transform: {
     // Specify the tsconfig file if it's different from the default
@@ -28,7 +27,7 @@ const jestConfig: JestConfigWithTsJest = {
   },
 
   moduleFileExtensions: ["ts", "js", "json", "node"],
-  // setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/test/jest.setup.ts"],
   collectCoverageFrom: [
     "<rootDir>/src/**/*.ts",
     "!<rootDir>/src/**/index.ts",
