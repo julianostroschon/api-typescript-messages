@@ -5,6 +5,7 @@
   "repository": "git@github.com:julianostroschon/api-typescript-messages.git",
   "author": "Juliano Stroschon <julianostroschon@gmail.com>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "build": "node build.js",
     "build:tsc": "tsc --project tsconfig.json",
@@ -30,6 +31,7 @@
     "jest": "^30.0.5",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2",
     "tsconfig-paths": "^3.15.0",
     "tsx": "^4.20.4",
     "typescript": "^5.0.4",
