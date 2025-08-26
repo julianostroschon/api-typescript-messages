@@ -13,12 +13,18 @@ interface MessageContent {
 
 export async function startRabbitConsumer() {
   const consumerTag = consumer.tag();
-  const connection = await connect(cfg.RABBITMQ_URL);
+  const connection = await connect(cfg.RABBITMQ_URL).catch((err) => {
+    console.log({ cfg })
+    logger.error(`❌ Erro ao conectar ao RabbitMQ`, { error: err.message });
+    throw err;
+  });
   const channel = await connection.createChannel();
 
   await channel.assertQueue(consumer.queue, { durable: true });
   await channel.assertExchange(consumer.exchange, 'direct', { durable: true });
-  await channel.bindQueue(consumer.queue, consumer.exchange, cfg.ROUTINE_NEW_MESAGE);
+  await channel.bindQueue(consumer.queue, consumer.exchange, cfg.ROUTINE_NEW_MESAGE).catch((err) => {
+    logger.error(`❌ Erro ao bindar fila à exchange`, { error: err.message });
+  });
 
   logger.info(`👷 Worker criado, aguardando mensagens do exchange "${consumer.exchange}"`, { queue: consumer.queue });
 
