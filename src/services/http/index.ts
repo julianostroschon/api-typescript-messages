@@ -1,6 +1,5 @@
-import fastify, { FastifyInstance } from "fastify";
-
 import { cfg, parentLogger } from "@/infra";
+import fastify, { FastifyInstance } from "fastify";
 import { constructRoutes } from "./routes";
 
 export async function buildFastify(): Promise<FastifyInstance> {
@@ -13,13 +12,18 @@ export async function buildFastify(): Promise<FastifyInstance> {
 
   await constructRoutes(app, logger);
 
+  return app;
+}
+
+// entrypoint separado
+export async function startServer(): Promise<void> {
+  const app = await buildFastify();
+
   app.listen({ port: cfg.PORT }, (err: Error | null): void => {
     if (err) {
-      logger.error(err);
+      parentLogger.child({ service: 'http' }).error(err);
       process.exit(1);
     }
-    logger.info(`🌐 Server listening on port:${cfg.PORT}`);
+    parentLogger.child({ service: 'http' }).info(`🌐 Server listening on port:${cfg.PORT}`);
   });
-
-  return app;
 }

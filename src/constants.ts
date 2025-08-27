@@ -4,5 +4,13 @@ const [API_MAJOR_VERSION] = (packageInfo && packageInfo.version ? packageInfo.ve
 const URL_PREFIX = `/api/v${API_MAJOR_VERSION}/`;
 const PROJECT_NAME = packageInfo.name;
 
-export { PROJECT_NAME, URL_PREFIX };
+const HTTP_STATUS = {
+  SUCCESS: 200,
+  ERROR: {
+    BAD_USER_INPUT: 400,
+    SERVER_INTERNAL: 500
+  }
+}
+
+export { HTTP_STATUS, PROJECT_NAME, URL_PREFIX };
 
