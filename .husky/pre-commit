@@ -1,0 +1,15 @@
+#!/bin/sh
+PATHS=$(git diff --cached --name-only)
+
+if [ -z "$PATHS" ]; then
+  echo "Skipping no changes detected"
+else
+  npx git-format-staged -f 'prettier --ignore-unknown --stdin --stdin-filepath "{}"' .
+
+  FILTERED=$(echo "$PATHS" | grep -E '\.(ts|tsx|js|jsx)$')
+  if [ -n "$FILTERED" ]; then
+    yarn test:changed $FILTERED
+  else
+    echo "Nenhum arquivo de código alterado, pulando testes"
+  fi
+fi

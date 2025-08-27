@@ -12,7 +12,7 @@ export const parentLogger = winston.createLogger({
 if (process.env.NODE_ENV !== 'production') {
   parentLogger.add(new winston.transports.Console({
     format: winston.format.combine(
-      winston.format.colorize({ all: true }),
+      winston.format.colorize({ level: true }),
       winston.format.simple()
     )
   }));
