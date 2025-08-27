@@ -14,7 +14,6 @@ interface MessageContent {
 export async function startRabbitConsumer() {
   const consumerTag = consumer.tag();
   const connection = await connect(cfg.RABBITMQ_URL).catch((err) => {
-    console.log({ cfg })
     logger.error(`❌ Erro ao conectar ao RabbitMQ`, { error: err.message });
     throw err;
   });

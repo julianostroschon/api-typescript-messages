@@ -58,18 +58,15 @@ describe('RabbitMQ Consumer', () => {
   });
 
   it('should initialize rabbitmq consumer correctly', async () => {
-    // console.log('🧪 Iniciando teste de inicialização do consumer...', );
     
     await startRabbitConsumer();
 
     expect(connect).toHaveBeenCalledWith(cfg.RABBITMQ_URL);
-    // expect(mockConnection.createChannel).toHaveBeenCalled();
     expect(mockChannel.assertQueue).toHaveBeenCalled();
     expect(mockChannel.assertExchange).toHaveBeenCalled();
     expect(mockChannel.bindQueue).toHaveBeenCalled();
     expect(mockChannel.consume).toHaveBeenCalled();
     
-    // console.log('✅ Teste de inicialização concluído com sucesso!');
   });
 
   it('should process valid messages correctly', async () => {
