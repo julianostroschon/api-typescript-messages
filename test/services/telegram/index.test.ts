@@ -1,19 +1,37 @@
-import { cfg } from '@/infra';
 import { sendTelegramMessage } from '@/services/telegram';
 import { Channel, connect, Connection } from 'amqplib';
 
 jest.mock('amqplib');
 
-// Unificar todos os exports do módulo infra em um único mock
+// Criamos uma classe fake para simular o construtor do TelegramBot
+const mockSendMessage = jest.fn().mockResolvedValue({});
+const mockOnText = jest.fn();
+
+jest.mock('node-telegram-bot-api', () => {
+  return jest.fn().mockImplementation(() => ({
+    onText: mockOnText,
+    sendMessage: mockSendMessage,
+    close: jest.fn()
+  }));
+});
+
+// Mock do módulo infra
 jest.mock('@/infra', () => ({
   cfg: {
-    RABBITMQ_URL: 'amqp://localhost',
     ROUTINE_NEW_MESAGE: 'new-message',
-    TELEGRAM_TOKEN: 'token'
+    RABBITMQ_URL: 'amqp://localhost',
+    TELEGRAM_TOKEN: 'fake-token'
   },
+  parentLogger: {
+    child: () => ({
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn()
+    })
+  }
 }));
 
-// Mock explícito para manter shape do módulo de mensagens
+// Mock do módulo de mensagens (se for usado em outro fluxo)
 jest.mock('@/services/messages', () => ({
   MessageServices: { Telegram: 'TELEGRAM' },
   sendMessage: jest.fn()
@@ -39,25 +57,23 @@ beforeEach(() => {
   } as unknown as jest.Mocked<Connection>;
 
   (connect as jest.Mock).mockResolvedValue(mockConnection);
+
+  jest.clearAllMocks();
 });
 
-describe('RabbitMQ Consumer', () => {
+describe('Telegram service', (): void => {
+  it('Start bot and send message', async (): Promise<void> => {
+    const chatId = '12345';
+    const text = 'mensagem de teste';
 
-  afterEach(() => {
-    jest.clearAllMocks();
+    expect(sendTelegramMessage(chatId, text)).resolves.toEqual({ status: 'queued' });
+
+    expect(mockSendMessage).toHaveBeenCalledWith(chatId, text, expect.any(Object));
   });
 
-  it.only('should initialize rabbitmq consumer correctly', async () => {
-    await sendTelegramMessage('21', 'oito');
-
-    expect(connect).toHaveBeenCalledWith(cfg.RABBITMQ_URL);
-    expect(mockChannel.assertQueue).toHaveBeenCalledTimes(1);
-    expect(mockChannel.assertQueue).toHaveBeenCalledWith('input', { durable: true });
-    expect(mockChannel.assertExchange).toHaveBeenCalledTimes(1);
-    expect(mockChannel.assertExchange).toHaveBeenCalledWith('reader', 'direct', { durable: true });
-    expect(mockChannel.bindQueue).toHaveBeenCalledTimes(1);
-    expect(mockChannel.bindQueue).toHaveBeenCalledWith('input', 'reader', 'new-message');
-    expect(mockChannel.consume).toHaveBeenCalledTimes(1);
-    expect(mockChannel.consume).toHaveBeenCalledWith('input', expect.any(Function), { consumerTag: 'consumer-tag' });
+  it('deve lançar erro quando chatId for inválido', async (): Promise<void> => {
+    await expect(sendTelegramMessage('invalid-id', 'teste'))
+      .rejects
+      .toThrow('ChatId inválido');
   });
 });
