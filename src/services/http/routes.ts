@@ -2,7 +2,9 @@ import { FastifyInstance } from "fastify";
 import { Logger } from "winston";
 
 import { HTTP_STATUS, URL_PREFIX } from "@/constants";
+import { cfg } from "@/infra";
 import { publishMessage } from "@/producer/rabbit";
+import { verify } from "jsonwebtoken";
 
 export async function constructRoutes(
   app: FastifyInstance,
@@ -13,13 +15,50 @@ export async function constructRoutes(
     try {
       logger.info('📥 Received request', { body: req.body });
 
-      const body = (req.body as unknown as { message: string, to: string });
+      const body = (req.body as unknown as { token: string });
+      if (!body.token) {
+        logger.warn('Missing token');
+        return reply.status(HTTP_STATUS.ERROR.BAD_USER_INPUT).send({
+          message: "Token is not found",
+          status: "fail",
+        });
+      }
+      const tokenCleaned = decode<{ to: string, message: string }>(body.token)
+      if (!tokenCleaned.to || !tokenCleaned.message) {
+        logger.warn('Missing required fields');
+        return reply.status(HTTP_STATUS.ERROR.BAD_USER_INPUT).send({
+          message: "Missing 'to' or 'messsage' fields",
+          err: "Missing required fields!",
+          status: "fail",
+        });
+      }
+
+      const { to, message } = tokenCleaned;
+      await publishMessage(to, message);
+      return reply.status(HTTP_STATUS.SUCCESS).send({
+        status: "queued",
+      });
+    } catch (error) {
+      logger.error('❌ Error processing request:', error);
+      return reply.status(HTTP_STATUS.ERROR.SERVER_INTERNAL).send({
+        status: "fail",
+        message: "Internal server error",
+        err: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  app.post(`${URL_PREFIX}clean`, async (req, reply) => {
+    try {
+      logger.info('📥 Received request', { body: req.body });
+
+      const body = (req.body as unknown as { to: string, message: string });
+
       if (!body.to || !body.message) {
         logger.warn('Missing required fields');
         return reply.status(HTTP_STATUS.ERROR.BAD_USER_INPUT).send({
-          status: "fail",
           message: "Missing 'to' or 'messsage' fields",
-          err: "Missing required fields!"
+          err: "Missing required fields!",
+          status: "fail",
         });
       }
 
@@ -38,3 +77,11 @@ export async function constructRoutes(
     }
   });
 }
+
+function decode<T>(token: string): T {
+  return verify(
+    token,
+    cfg.JWT_SECRET
+  ) as T;
+};
+

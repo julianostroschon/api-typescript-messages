@@ -16,7 +16,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
 }
 
 // entrypoint separado
-export async function startServer(): Promise<void> {
+export async function startServer(): Promise<FastifyInstance> {
   const app = await buildFastify();
 
   app.listen({ port: cfg.PORT }, (err: Error | null): void => {
@@ -26,4 +26,6 @@ export async function startServer(): Promise<void> {
     }
     parentLogger.child({ service: 'http' }).info(`🌐 Server listening on port:${cfg.PORT}`);
   });
+
+  return app
 }

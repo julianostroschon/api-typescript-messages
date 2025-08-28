@@ -10,7 +10,7 @@ const envSchema = z.object({
   TELEGRAM_TOKEN: z.string().default('token'),
 
   // // Autenticação
-  // JWT_SECRET: z.string().min(10, 'JWT_SECRET deve ter pelo menos 10 caracteres'),
+  JWT_SECRET: z.string().min(5, 'secret'),
   // CHAT_API_SECRET: z.string(),
 
   // // RabbitMQ

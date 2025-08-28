@@ -26,6 +26,7 @@ function getBot(): TelegramBot {
     bot = initBot()
 
     bot.onText(/\/start/, (msg: Message): void => {
+      logger.info('Comando /start detectado!');
       const chatId = msg.chat.id;
       const text = 'Seu Chat Id:`' + chatId + '`'
       bot?.sendMessage(chatId, text, {

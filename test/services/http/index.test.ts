@@ -27,10 +27,10 @@ describe('Fastify server', () => {
     expect(response.json()).toEqual({ hello: 'world' });
   });
 
-  it('/api/v1/send, erro missing required fields', async () => {
+  it('/api/v1/clean, erro missing required fields', async () => {
     const response = await app.inject({
       method: 'POST',
-      url: '/api/v1/send',
+      url: '/api/v1/clean',
       body: {
         to: '9090',
       }
@@ -44,10 +44,10 @@ describe('Fastify server', () => {
     });
   });
 
-  it('/api/v1/send, successfully publishMessage', async () => {
+  it('/api/v1/clean, successfully publishMessage', async () => {
     const response = await app.inject({
       method: 'POST',
-      url: '/api/v1/send',
+      url: '/api/v1/clean',
       body: {
         to: '9090',
         message: 'oito'

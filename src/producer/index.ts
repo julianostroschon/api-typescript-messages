@@ -1,5 +1,5 @@
 import { parentLogger } from '@/infra';
-import { buildFastify } from '@/services';
+import { startServer } from '@/services';
 import { setupGracefulShutdown } from '@/utils';
 import { startRabbitProducer } from './rabbit';
 
@@ -8,7 +8,7 @@ const logger = parentLogger.child({ service: 'producer-app' });
 async function main(): Promise<void> {
   const channel = await startRabbitProducer();
 
-  const app = await buildFastify();
+  const app = await startServer();
 
   setupGracefulShutdown([
     async (): Promise<void> => {
