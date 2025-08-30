@@ -1,6 +1,5 @@
 import { Channel, connect, Connection } from 'amqplib';
 import { startRabbitConsumer } from '../../src/consumer/rabbit';
-import { cfg } from '../../src/infra';
 import { MessageServices, sendMessage } from '../../src/services/messages';
 
 jest.mock('amqplib');
@@ -30,6 +29,10 @@ jest.mock('../../src/services/messages', () => ({
   sendMessage: jest.fn()
 }));
 
+const cfg = {
+  RABBITMQ_URL: 'amqp://localhost',
+}
+
 describe('RabbitMQ Consumer', () => {
   let mockChannel: jest.Mocked<Channel>;
   let mockConnection: jest.Mocked<Connection>;
@@ -58,7 +61,7 @@ describe('RabbitMQ Consumer', () => {
   });
 
   it('should initialize rabbitmq consumer correctly', async () => {
-    
+
     await startRabbitConsumer();
 
     expect(connect).toHaveBeenCalledWith(cfg.RABBITMQ_URL);
@@ -66,7 +69,7 @@ describe('RabbitMQ Consumer', () => {
     expect(mockChannel.assertExchange).toHaveBeenCalled();
     expect(mockChannel.bindQueue).toHaveBeenCalled();
     expect(mockChannel.consume).toHaveBeenCalled();
-    
+
   });
 
   it('should process valid messages correctly', async () => {
