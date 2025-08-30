@@ -2,8 +2,10 @@ name: CI/CD Pipeline
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - 'master'
+    # tags:
+    #   - '*'
 
 concurrency:
   group: ci-tests-${{ github.ref }}-1
@@ -13,6 +15,9 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Check out code
         uses: actions/checkout@v4
