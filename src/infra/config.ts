@@ -14,7 +14,7 @@ const envSchema = z.object({
   // CHAT_API_SECRET: z.string(),
 
   // // RabbitMQ
-  RABBITMQ_URL: z.url().default('amqp://user:password@localhost:5672'),
+  RABBITMQ_URL: z.url().optional(),
   MAIN_QUEUE: z.string().default('messages'),
 
   // // Mensageria interna
