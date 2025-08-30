@@ -6,7 +6,7 @@ if [ -z "$PATHS" ]; then
 else
   npx git-format-staged -f 'prettier --ignore-unknown --stdin --stdin-filepath "{}"' .
 
-  FILTERED=$(echo "$PATHS" | grep -E '\.(ts|tsx|js|jsx)$')
+  FILTERED=$(echo "$PATHS" | grep -E '\.(ts|tsx|js|jsx|json)$')
   if [ -n "$FILTERED" ]; then
     yarn test:changed $FILTERED
   else
