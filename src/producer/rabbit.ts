@@ -2,6 +2,7 @@ import { connect, ConsumeMessage, type Channel } from 'amqplib';
 
 import { consumer } from '@/consumer/constants';
 import { cfg, parentLogger } from '@/infra';
+import { MessageServices, sendMessage } from '@/services';
 import { producer } from './constants';
 
 let producerChannel: Channel;
@@ -9,6 +10,9 @@ const logger = parentLogger.child({ service: 'producer' });
 
 
 export async function startRabbitProducer(): Promise<Channel> {
+  if (!cfg.RABBITMQ_URL) {
+    throw new Error('❌ RabbitMQ URL is not configured.');
+  }
   const consumerTag = producer.tag();
   const connection = await connect(cfg.RABBITMQ_URL);
   const channel = await connection.createChannel();
@@ -33,22 +37,23 @@ async function onProducerMessage(consumeMessage: ConsumeMessage | null, channel:
     const { to, message } = content
 
     if (!to || !message) {
-      logger.error(`❌ Mensagem recebida inválida`, { content });
+      logger.error(`❌ Invalid message received`, { content });
       return channel.nack(consumeMessage, false, false);
     }
 
-    logger.info(`📥 Processando mensagem`, {
+    logger.info(`📥 Processing message`, {
       messageLength: message.length,
       to: to,
     });
 
-    await publishMessage(to, message);
+    const isRabbitEnabled = !!(cfg.RABBITMQ_URL && cfg.RABBITMQ_URL.length > 0);
+    await publishMessage(to, message, !isRabbitEnabled);
 
     channel.ack(consumeMessage);
 
   } catch (err) {
-    logger.error(`❌ Erro ao processar mensagem`, {
-      error: err instanceof Error ? err.message : 'Erro desconhecido',
+    logger.error(`❌ Error processing message`, {
+      error: err instanceof Error ? err.message : 'Unknown error',
       content: consumeMessage.content.toString()
     });
     channel.nack(consumeMessage, false, false);
@@ -56,9 +61,17 @@ async function onProducerMessage(consumeMessage: ConsumeMessage | null, channel:
 }
 
 
-export async function publishMessage(to: string, message: string): Promise<void> {
+export async function publishMessage(to: string, message: string, isAlone: boolean): Promise<void> {
+  if (isAlone) {
+    logger.warn('⚠️ RabbitMQ is not enabled, sending message directly', { to });
+    await sendMessage(MessageServices.Telegram, { to, message });
+    return
+  }
+  if (!cfg?.RABBITMQ_URL) {
+    throw new Error('❌ RabbitMQ URL is not configured.');
+  }
   if (!producerChannel) {
-    await startRabbitProducer()
+    await startRabbitProducer();
   }
 
   const content = Buffer.from(JSON.stringify({ to, message }));
@@ -69,15 +82,15 @@ export async function publishMessage(to: string, message: string): Promise<void>
     });
 
     if (success) {
-      logger.info(`📤 Mensagem enviada para exchange "${consumer.exchange}"`, {
+      logger.info(`📤 Message sent to exchange "${consumer.exchange}"`, {
         messageLength: message.length,
         to,
       });
       return
     }
-    logger.warn(`⚠️ Mensagem não foi confirmada pelo RabbitMQ`, { to });
+    logger.warn(`⚠️ Message not confirmed by RabbitMQ`, { to });
   } catch (error) {
-    logger.error(`❌ Erro ao enviar mensagem para exchange:`, error);
+    logger.error(`❌ Error sending message to exchange:`, error);
     throw error;
   }
 }

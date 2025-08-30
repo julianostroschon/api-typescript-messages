@@ -1,3 +1,4 @@
+import { MessageServices, sendMessage } from '@/services';
 import { FastifyInstance } from "fastify";
 import { Logger } from "winston";
 
@@ -8,7 +9,8 @@ import { verify } from "jsonwebtoken";
 
 export async function constructRoutes(
   app: FastifyInstance,
-  logger: Logger
+  logger: Logger,
+  isAlone: boolean
 ): Promise<void> {
 
   app.post(`${URL_PREFIX}send`, async (req, reply) => {
@@ -34,9 +36,16 @@ export async function constructRoutes(
       }
 
       const { to, message } = tokenCleaned;
-      await publishMessage(to, message);
+      if (!isAlone) {
+        await publishMessage(to, message, isAlone);
+        return reply.status(HTTP_STATUS.SUCCESS).send({
+          status: "queued",
+        });
+      }
+      const { status } = await sendMessage(MessageServices.Telegram, { to, message });
       return reply.status(HTTP_STATUS.SUCCESS).send({
-        status: "queued",
+        message: "Service running in isolated mode, message submited.",
+        status
       });
     } catch (error) {
       logger.error('❌ Error processing request:', error);
@@ -63,7 +72,7 @@ export async function constructRoutes(
       }
 
       const { to, message } = body;
-      await publishMessage(to, message);
+      await publishMessage(to, message, isAlone);
       return reply.status(HTTP_STATUS.SUCCESS).send({
         status: "queued",
       });
