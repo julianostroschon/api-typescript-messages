@@ -1,0 +1,111 @@
+name: lint/test
+on:
+  push:
+    branches:
+      - 'feature/*'
+      - 'bugfix/*'
+      - 'hotfix/*'
+      - 'chore/*'
+      - 'refact/*'
+      - 'feat/*'
+  pull_request:
+
+concurrency:
+  group: ci-tests-${{ github.ref }}-1
+  cancel-in-progress: true
+
+jobs:
+  yarn-install-cache:
+    runs-on:
+      labels: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: |
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            **/node_modules
+          key: ${{ runner.os }}-messages-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-messages-yarn-
+
+      - name: Install dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+
+  lint:
+    if: github.event_name == 'push'
+    runs-on:
+      labels: ubuntu-latest
+    timeout-minutes: 15
+    needs: [yarn-install-cache]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: |
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            **/node_modules
+          key: ${{ runner.os }}-messages-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Setup registry credentials
+        run: |
+          echo //npm.pkg.github.com/:_authToken=${{ secrets.PACKAGE_TOKEN }} >> .npmrc
+          yarn config set 'npmRegistries["//npm.pkg.github.com"].npmAuthToken' "${{ secrets.PACKAGE_TOKEN }}" --home
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Check code quality
+        run: yarn lint:ci
+
+      - name: Check code styles
+        run: yarn format:check
+
+  test-unit:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [yarn-install-cache]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: |
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            **/node_modules
+          key: ${{ runner.os }}-messages-yarn-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Check unit tests
+        run: DOTENV_CONFIG_QUIET=true NODE_ENV=test yarn test a --max-workers 2
