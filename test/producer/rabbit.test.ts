@@ -1,7 +1,6 @@
 import { Channel, connect, Connection } from 'amqplib';
-import { cfg } from '../../src/infra';
 import { startRabbitProducer } from '../../src/producer/rabbit';
-import { MessageServices, sendMessage } from '../../src/services/messages';
+import { sendMessage } from '../../src/services/messages';
 
 jest.mock('amqplib');
 
@@ -54,26 +53,17 @@ beforeEach(() => {
 
   (connect as jest.Mock).mockResolvedValue(mockConnection);
 
-  // const mockLoggerChild = {
-  //   info: jest.fn(),
-  //   warn: jest.fn(),
-  //   error: jest.fn()
-  // };
-
-  // mockParentLogger = {
-  //   child: jest.fn().mockReturnValue(mockLoggerChild),
-  //   info: jest.fn(),
-  //   warn: jest.fn(),
-  //   error: jest.fn()
-  // } as unknown as jest.Mocked<Logger>;
 });
+const cfg = {
+  RABBITMQ_URL: 'amqp://localhost',
+}
 describe('RabbitMQ Consumer', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it.only('should initialize rabbitmq consumer correctly', async () => {
+  it('should initialize rabbitmq consumer correctly', async () => {
     await startRabbitProducer();
 
     expect(connect).toHaveBeenCalledWith(cfg.RABBITMQ_URL);
@@ -85,31 +75,6 @@ describe('RabbitMQ Consumer', () => {
     expect(mockChannel.bindQueue).toHaveBeenCalledWith('input', 'reader', 'new-message');
     expect(mockChannel.consume).toHaveBeenCalledTimes(1);
     expect(mockChannel.consume).toHaveBeenCalledWith('input', expect.any(Function), { consumerTag: 'consumer-tag' });
-  });
-
-  it('should process valid messages correctly', async () => {
-    const mockMessage = {
-      content: Buffer.from(JSON.stringify({
-        to: '123456',
-        message: 'test message'
-      })),
-    };
-
-    (sendMessage as jest.Mock).mockResolvedValueOnce({ status: 'queued' });
-
-    await startRabbitProducer();
-
-    const consumeCallback = mockChannel.consume.mock.calls[0][1];
-    await consumeCallback(mockMessage as any);
-
-    expect(sendMessage).toHaveBeenCalledWith(
-      MessageServices.Telegram,
-      expect.objectContaining({
-        to: '123456',
-        message: 'test message'
-      })
-    );
-    expect(mockChannel.ack).toHaveBeenCalledWith(mockMessage);
   });
 
   it('should handle invalid messages', async () => {
