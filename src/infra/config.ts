@@ -4,7 +4,7 @@ import { z } from 'zod';
 config();
 
 const envSchema = z.object({
-  // NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3001),
   // HOST: z.string().default('0.0.0.0'),
   TELEGRAM_TOKEN: z.string().default('token'),

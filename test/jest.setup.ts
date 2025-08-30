@@ -1,3 +1,4 @@
+import { isTesting } from '@/constants';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
@@ -8,7 +9,10 @@ config({ path: resolve(__dirname, '../.env.test'), quiet: true, });
 jest.setTimeout(30000);
 
 // Silencia logs durante os testes
-// jest.spyOn(console, 'log').mockImplementation(() => { });
-jest.spyOn(console, 'info').mockImplementation(() => { });
-jest.spyOn(console, 'warn').mockImplementation(() => { });
-jest.spyOn(console, 'error').mockImplementation(() => { });
+if (isTesting) {
+  jest.spyOn(console, 'log').mockImplementation(() => { });
+  jest.spyOn(console, 'debug').mockImplementation(() => { });
+  jest.spyOn(console, 'info').mockImplementation(() => { });
+  jest.spyOn(console, 'warn').mockImplementation(() => { });
+  jest.spyOn(console, 'error').mockImplementation(() => { });
+}
