@@ -1,6 +1,6 @@
 {
   "name": "api-message",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Client to send messages using typescript",
   "repository": "git@github.com:julianostroschon/api-typescript-messages.git",
   "author": "Juliano Stroschon <julianostroschon@gmail.com>",
