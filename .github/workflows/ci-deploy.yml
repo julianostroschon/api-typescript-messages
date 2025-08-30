@@ -2,10 +2,8 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - 'master'
-    # tags:
-    #   - '*'
+    tags:
+      - '*'
 
 concurrency:
   group: ci-tests-${{ github.ref }}-1
