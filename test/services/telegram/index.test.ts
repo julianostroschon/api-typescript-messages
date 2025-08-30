@@ -74,6 +74,6 @@ describe('Telegram service', (): void => {
   it('deve lançar erro quando chatId for inválido', async (): Promise<void> => {
     await expect(sendTelegramMessage('invalid-id', 'teste'))
       .rejects
-      .toThrow('ChatId inválido');
+      .toThrow('Invalid chatId: invalid-id');
   });
 });

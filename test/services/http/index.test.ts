@@ -10,7 +10,7 @@ describe('Fastify server', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
-    app = await buildFastify();
+    app = await buildFastify(true,);
   });
 
   afterAll(async () => {
@@ -55,7 +55,7 @@ describe('Fastify server', () => {
     });
 
     expect(publishMessage).toHaveBeenCalledTimes(1)
-    expect(publishMessage).toHaveBeenCalledWith('9090', 'oito')
+    expect(publishMessage).toHaveBeenCalledWith('9090', 'oito', true)
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
