@@ -18,7 +18,7 @@ export async function startRabbitConsumer(): Promise<Channel> {
   }
   const consumerTag = consumer.tag();
   const connection = await connect(cfg.RABBITMQ_URL).catch((err) => {
-    logger.error(`❌ Erro ao conectar ao RabbitMQ`, { error: err.message });
+    logger.error(`❌ Error to connect to RabbitMQ`, { error: err.message });
     throw err;
   });
   const channel = await connection.createChannel();
@@ -26,21 +26,21 @@ export async function startRabbitConsumer(): Promise<Channel> {
   await channel.assertQueue(consumer.queue, { durable: true });
   await channel.assertExchange(consumer.exchange, 'direct', { durable: true });
   await channel.bindQueue(consumer.queue, consumer.exchange, cfg.ROUTINE_NEW_MESAGE).catch((err) => {
-    logger.error(`❌ Erro ao bindar fila à exchange`, { error: err.message });
+    logger.error(`❌ Error to bind queue to exchange`, { error: err.message });
   });
 
-  logger.info(`👷 Worker criado, aguardando mensagens do exchange "${consumer.exchange}"`, { queue: consumer.queue });
+  logger.info(`👷 Worker created, waiting for messages from exchange "${consumer.exchange}"`, { queue: consumer.queue });
 
   channel.consume(consumer.queue, async (message: ConsumeMessage | null): Promise<void> => {
     if (message) {
       try {
         const content = JSON.parse(message.content.toString()) as MessageContent;
         if (!content.to || !content.message) {
-          logger.error(`❌ Mensagem inválida recebida`, { content });
+          logger.error(`❌ Invalid message received`, { content });
           return channel.nack(message, false, false);
         }
 
-        logger.info(`📥 Processando mensagem`, {
+        logger.info(`📥 Processing message`, {
           to: content.to,
           messageLength: content.message.length
         });
@@ -51,8 +51,8 @@ export async function startRabbitConsumer(): Promise<Channel> {
         channel.ack(message);
 
       } catch (err) {
-        logger.error(`❌ Erro ao processar mensagem`, {
-          error: err instanceof Error ? err.message : 'Erro desconhecido',
+        logger.error(`❌ Error processing message`, {
+          error: err instanceof Error ? err.message : 'Unknown error',
           content: message.content.toString()
         });
         channel.nack(message, false, false);

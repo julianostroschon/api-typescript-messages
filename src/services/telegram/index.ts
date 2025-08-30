@@ -26,22 +26,21 @@ function getBot(): TelegramBot {
     bot = initBot()
 
     bot.onText(/\/start/, (msg: Message): void => {
-      logger.info('Comando /start detectado!');
+      logger.info('Command /start detected!');
       const chatId = msg.chat.id;
-      const text = 'Seu Chat Id:`' + chatId + '`'
-      bot?.sendMessage(chatId, text, {
+      bot?.sendMessage(chatId, chatId.toString(), {
         ...options,
         reply_to_message_id: msg.message_id
       })
         .then((): void => {
-          logger.info(`🤖 Resposta automática enviada para chatId: ${chatId}`);
+          logger.info(`🤖 Automatic response sent to chatId: ${chatId}`);
         })
         .catch((error: unknown): void => {
-          logger.error(`❌ Erro ao enviar resposta automática para chatId ${chatId}:`, error);
+          logger.error(`❌ Error sending automatic response to chatId ${chatId}:`, error);
         });
     });
 
-    logger.info('🤖 Bot do Telegram inicializado com monitoramento de mensagens');
+    logger.info('🤖 Telegram bot initialized with message monitoring');
   }
   return bot;
 }
@@ -51,15 +50,15 @@ export async function sendTelegramMessage(chatId: string | number, text: string,
     const botInstance = getBot();
 
     if (!chatId || isNaN(Number(chatId))) {
-      throw new Error(`ChatId inválido: ${chatId}`);
+      throw new Error(`Invalid chatId: ${chatId}`);
     }
 
     await botInstance.sendMessage(chatId, text, opts);
 
-    logger.info(`✅ Mensagem enviada com sucesso para chatId: ${chatId}`);
+    logger.info(`✅ Message sent successfully to chatId: ${chatId}`);
     return { status: 'queued' };
   } catch (error) {
-    logger.error(`❌ Erro ao enviar mensagem para chatId ${chatId}:`, error);
+    logger.error(`❌ Error sending message to chatId ${chatId}:`, error);
     throw error;
   }
 }
@@ -68,6 +67,6 @@ export function cleanupTelegramBot(): void {
   if (bot) {
     bot.close();
     bot = null;
-    logger.info('🧹 Bot do Telegram encerrado');
+    logger.info('🧹 Telegram bot closed');
   }
 }
