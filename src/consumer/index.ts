@@ -15,7 +15,7 @@ async function main(): Promise<void> {
   ]);
 }
 
-main().catch((err) => {
-  logger.error(err);
+main().catch((err: Error | null) => {
+  logger.error(err?.message);
   process.exit(1);
 });

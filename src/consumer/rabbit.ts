@@ -1,4 +1,4 @@
-import { connect, type ConsumeMessage } from 'amqplib';
+import { Channel, connect, type ConsumeMessage } from 'amqplib';
 
 import { cfg, parentLogger } from '@/infra';
 import { MessageServices, sendMessage } from '@/services';
@@ -11,7 +11,11 @@ interface MessageContent {
   message: string;
 }
 
-export async function startRabbitConsumer() {
+export async function startRabbitConsumer(): Promise<Channel> {
+  const isRabbitEnabled = !!(cfg.RABBITMQ_URL && cfg.RABBITMQ_URL.length > 0);
+  if (!isRabbitEnabled || !cfg.RABBITMQ_URL) {
+    throw new Error('❌ RabbitMQ URL is not configured.');
+  }
   const consumerTag = consumer.tag();
   const connection = await connect(cfg.RABBITMQ_URL).catch((err) => {
     logger.error(`❌ Erro ao conectar ao RabbitMQ`, { error: err.message });
