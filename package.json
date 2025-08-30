@@ -12,7 +12,7 @@
     "dev": "tsx --tsconfig tsconfig.json --watch src/index.ts",
     "test": "DOTENV_CONFIG_QUIET=true NODE_ENV=test jest --detectOpenHandles --forceExit --watch",
     "test:coverage": "jest --coverage --detectOpenHandles --forceExit",
-    "test:changed": "CI=true jest --passWithNoTests --runInBand --ci --findRelatedTests",
+    "test:changed": "CI=true DOTENV_CONFIG_QUIET=true jest --passWithNoTests --runInBand --ci --findRelatedTests",
     "lint": "eslint ./src/** .ts",
     "producer": "tsx --tsconfig tsconfig.json --watch src/producer",
     "consumer": "tsx --tsconfig tsconfig.json --watch src/consumer",
