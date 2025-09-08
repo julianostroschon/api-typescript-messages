@@ -10,12 +10,11 @@ let bot: TelegramBot | null = null;
 
 function initBot(): TelegramBot {
   const botOptions: ConstructorOptions = {
-    polling: isTesting ? {
+    polling: !isTesting ? {
       interval: 300,
       autoStart: true,
       params: {
-        timeout: 10,
-        offset: -1
+        timeout: 10
       }
     } : false
   }
@@ -24,13 +23,12 @@ function initBot(): TelegramBot {
 
 function getBot(): TelegramBot {
   if (!bot) {
-    bot = initBot()
+    bot = initBot();
 
     // Only set up message handlers in non-test environment
     if (!isTesting) {
       bot.onText(/\/start/, (msg: Message): void => {
-        console.log({ msg });
-        logger.info('Command /start detected!');
+        logger.info('Command /start received from:', { chatId: msg.chat.id, user: msg.from?.username });
         const chatId = msg.chat.id;
         bot?.sendMessage(chatId, chatId.toString(), {
           ...options,
@@ -45,6 +43,8 @@ function getBot(): TelegramBot {
       });
 
       logger.info('🤖 Telegram bot initialized with message monitoring');
+    } else {
+      logger.info('🤖 Telegram bot initialized in test mode (no polling)');
     }
   }
   return bot;
@@ -66,6 +66,11 @@ export async function sendTelegramMessage(chatId: string | number, text: string,
     logger.error(`❌ Error sending message to chatId ${chatId}:`, error);
     throw error;
   }
+}
+
+export function initializeTelegramBot(): void {
+  logger.info('🚀 Initializing Telegram bot...');
+  getBot(); // This will create the bot and set up listeners
 }
 
 export function cleanupTelegramBot(): void {
