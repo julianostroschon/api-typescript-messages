@@ -1,11 +1,11 @@
 import { MessageServices, sendMessage } from '@/services';
 import { FastifyInstance } from "fastify";
+import { verify } from "jsonwebtoken";
 import { Logger } from "winston";
 
 import { HTTP_STATUS, URL_PREFIX } from "@/constants";
 import { cfg } from "@/infra";
 import { publishMessage } from "@/producer/rabbit";
-import { verify } from "jsonwebtoken";
 
 export async function constructRoutes(
   app: FastifyInstance,
@@ -37,11 +37,13 @@ export async function constructRoutes(
 
       const { to, message } = tokenCleaned;
       if (!isAlone) {
+        logger.info(`📤 Routing message to RabbitMQ queue (queued mode) for chatId: ${to}`);
         await publishMessage(to, message, isAlone);
         return reply.status(HTTP_STATUS.SUCCESS).send({
           status: "queued",
         });
       }
+      logger.info(`📦 Sending message directly to Telegram (direct mode) for chatId: ${to}`);
       const { status } = await sendMessage(MessageServices.Telegram, { to, message });
       return reply.status(HTTP_STATUS.SUCCESS).send({
         message: "Service running in isolated mode, message submited.",
@@ -72,6 +74,7 @@ export async function constructRoutes(
       }
 
       const { to, message } = body;
+      logger.info(`📤 Routing clean message to RabbitMQ queue for chatId: ${to}`);
       await publishMessage(to, message, isAlone);
       return reply.status(HTTP_STATUS.SUCCESS).send({
         status: "queued",

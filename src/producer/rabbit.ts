@@ -3,11 +3,11 @@ import { connect, ConsumeMessage, type Channel } from 'amqplib';
 import { consumer } from '@/consumer/constants';
 import { cfg, parentLogger } from '@/infra';
 import { MessageServices, sendMessage } from '@/services';
+
 import { producer } from './constants';
 
 let producerChannel: Channel;
 const logger = parentLogger.child({ service: 'producer' });
-
 
 export async function startRabbitProducer(): Promise<Channel> {
   if (!cfg.RABBITMQ_URL) {
@@ -15,19 +15,17 @@ export async function startRabbitProducer(): Promise<Channel> {
   }
   const consumerTag = producer.tag();
   const connection = await connect(cfg.RABBITMQ_URL);
-  const channel = await connection.createChannel();
+  producerChannel = await connection.createChannel();
 
-  await channel.assertQueue(producer.queue, { durable: true });
-  await channel.assertExchange(producer.exchange, 'direct', { durable: true });
-  await channel.bindQueue(producer.queue, producer.exchange, cfg.ROUTINE_NEW_MESAGE);
+  await producerChannel.assertQueue(producer.queue, { durable: true });
+  await producerChannel.assertExchange(producer.exchange, 'direct', { durable: true });
+  await producerChannel.bindQueue(producer.queue, producer.exchange, cfg.ROUTINE_NEW_MESAGE);
 
-  logger.info(`👷 Worker criado, aguardando mensagens`, { queue: producer.queue });
+  logger.info(`👷 Worker created, waiting for messages`, { queue: producer.queue });
 
-  channel.consume(producer.queue, async (msg: ConsumeMessage | null) => onProducerMessage(msg, channel), { consumerTag });
+  producerChannel.consume(producer.queue, async (msg: ConsumeMessage | null): Promise<void> => onProducerMessage(msg, producerChannel), { consumerTag });
 
-  producerChannel = channel
-
-  return channel;
+  return producerChannel;
 }
 
 async function onProducerMessage(consumeMessage: ConsumeMessage | null, channel: Channel): Promise<void> {
@@ -64,7 +62,8 @@ async function onProducerMessage(consumeMessage: ConsumeMessage | null, channel:
 export async function publishMessage(to: string, message: string, isAlone: boolean): Promise<void> {
   if (isAlone) {
     let isFirstAttempt = true
-    if (isFirstAttempt) logger.warn('⚠️ RabbitMQ is not enabled, sending message directly', { to });
+    if (isFirstAttempt) logger.warn('⚠️ RabbitMQ is not enabled, trying to send message directly', { to });
+
     await sendMessage(MessageServices.Telegram, { to, message });
     isFirstAttempt = false
     return

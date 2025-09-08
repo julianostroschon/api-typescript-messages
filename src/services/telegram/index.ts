@@ -57,6 +57,12 @@ export async function sendTelegramMessage(chatId: string | number, text: string,
     if (!chatId || isNaN(Number(chatId))) {
       throw new Error(`Invalid chatId: ${chatId}`);
     }
+    const log = {
+      producer: logger.info(`📤 PRODUCER sending message directly to chatId: ${chatId}`),
+      consumer: logger.info(`📥 CONSUMER processing queued message for chatId: ${chatId}`),
+      unknown: logger.info(`💬 Sending message to chatId: ${chatId}`)
+    }
+    log[cfg.serviceType || 'unknown'];
 
     await botInstance.sendMessage(chatId, text, opts);
 
@@ -69,14 +75,22 @@ export async function sendTelegramMessage(chatId: string | number, text: string,
 }
 
 export function initializeTelegramBot(): void {
-  logger.info('🚀 Initializing Telegram bot...');
-  getBot(); // This will create the bot and set up listeners
+  getBot();
+
+  const log = {
+    producer: logger.info('📤 Telegram bot initialized in PRODUCER mode (direct delivery)'),
+    consumer: logger.info('📥 Telegram bot initialized in CONSUMER mode (queued delivery)'),
+    unknown: logger.info('🤖 Telegram bot initialized')
+  }
+  const serviceType = cfg.serviceType || 'unknown';
+  log[serviceType];
 }
 
 export function cleanupTelegramBot(): void {
   if (bot) {
     bot.close();
     bot = null;
+    
     logger.info('🧹 Telegram bot closed');
   }
 }

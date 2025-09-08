@@ -32,6 +32,14 @@ if (!parsed.success) {
 
 const rawEnv = parsed.data;
 
+const processTitle = process.argv[1] || 'unknown';
+function getProcessType(): 'producer' | 'consumer' | 'unknown' {
+  if (processTitle.includes('producer')) return 'producer';
+  if (processTitle.includes('consumer')) return 'consumer';
+  return 'unknown';
+}
+
 export const cfg = {
   ...rawEnv,
+  serviceType: getProcessType(),
 };

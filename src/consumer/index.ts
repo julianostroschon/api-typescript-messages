@@ -1,11 +1,13 @@
 import { parentLogger } from '@/infra';
 import { cleanupTelegramBot, initializeTelegramBot } from '@/services/telegram';
 import { setupGracefulShutdown } from '@/utils';
+
 import { startRabbitConsumer } from './rabbit';
 
 const logger = parentLogger.child({ service: 'consumer' });
 
 async function main(): Promise<void> {
+  logger.info('🤖 Initializing Telegram bot for queued message processing');
   initializeTelegramBot();
 
   const channel = await startRabbitConsumer();
