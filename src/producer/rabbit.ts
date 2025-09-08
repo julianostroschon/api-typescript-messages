@@ -63,8 +63,10 @@ async function onProducerMessage(consumeMessage: ConsumeMessage | null, channel:
 
 export async function publishMessage(to: string, message: string, isAlone: boolean): Promise<void> {
   if (isAlone) {
-    logger.warn('⚠️ RabbitMQ is not enabled, sending message directly', { to });
+    let isFirstAttempt = true
+    if (isFirstAttempt) logger.warn('⚠️ RabbitMQ is not enabled, sending message directly', { to });
     await sendMessage(MessageServices.Telegram, { to, message });
+    isFirstAttempt = false
     return
   }
   if (!cfg?.RABBITMQ_URL) {

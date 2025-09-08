@@ -1,5 +1,6 @@
 import TelegramBot, { ConstructorOptions, Message, SendMessageOptions } from 'node-telegram-bot-api';
 
+import { isTesting } from '@/constants';
 import { cfg, parentLogger } from '@/infra';
 
 const logger = parentLogger.child({ service: 'telegram' });
@@ -9,14 +10,14 @@ let bot: TelegramBot | null = null;
 
 function initBot(): TelegramBot {
   const botOptions: ConstructorOptions = {
-    polling: {
+    polling: isTesting ? {
       interval: 300,
       autoStart: true,
       params: {
         timeout: 10,
         offset: -1
       }
-    }
+    } : false
   }
   return new TelegramBot(cfg.TELEGRAM_TOKEN, botOptions);
 }
@@ -25,22 +26,26 @@ function getBot(): TelegramBot {
   if (!bot) {
     bot = initBot()
 
-    bot.onText(/\/start/, (msg: Message): void => {
-      logger.info('Command /start detected!');
-      const chatId = msg.chat.id;
-      bot?.sendMessage(chatId, chatId.toString(), {
-        ...options,
-        reply_to_message_id: msg.message_id
-      })
-        .then((): void => {
-          logger.info(`🤖 Automatic response sent to chatId: ${chatId}`);
+    // Only set up message handlers in non-test environment
+    if (!isTesting) {
+      bot.onText(/\/start/, (msg: Message): void => {
+        console.log({ msg });
+        logger.info('Command /start detected!');
+        const chatId = msg.chat.id;
+        bot?.sendMessage(chatId, chatId.toString(), {
+          ...options,
+          reply_to_message_id: msg.message_id
         })
-        .catch((error: unknown): void => {
-          logger.error(`❌ Error sending automatic response to chatId ${chatId}:`, error);
-        });
-    });
+          .then((): void => {
+            logger.info(`🤖 Automatic response sent to chatId: ${chatId}`);
+          })
+          .catch((error: unknown): void => {
+            logger.error(`❌ Error sending automatic response to chatId ${chatId}:`, error);
+          });
+      });
 
-    logger.info('🤖 Telegram bot initialized with message monitoring');
+      logger.info('🤖 Telegram bot initialized with message monitoring');
+    }
   }
   return bot;
 }

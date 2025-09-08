@@ -1,3 +1,4 @@
+import { isProduction } from '@/constants';
 import winston from 'winston';
 
 export const parentLogger = winston.createLogger({
@@ -9,11 +10,10 @@ export const parentLogger = winston.createLogger({
   ],
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  parentLogger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize({ level: true }),
-      winston.format.simple()
-    )
-  }));
+const options = isProduction ? { format: winston.format.simple() } : {
+  format: winston.format.combine(
+    winston.format.colorize({ level: true }),
+    winston.format.simple()
+  )
 }
+parentLogger.add(new winston.transports.Console(options));

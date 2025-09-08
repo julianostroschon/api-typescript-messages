@@ -7,14 +7,30 @@ const logger = parentLogger.child({ service: 'producer-app' });
 
 async function main(): Promise<void> {
   const isRabbitEnabled = !!(cfg.RABBITMQ_URL && cfg.RABBITMQ_URL.length > 0);
-  const app = await startServer(!isRabbitEnabled);
-  const inputs: { close: () => Promise<void> }[] = [app]
-  if (isRabbitEnabled) {
-    const channel = await startRabbitProducer();
-    inputs.push(channel);
-  }
 
-  setupGracefulShutdown(inputs.map(i => i.close.bind(i)));
+  const app = await startServer(!isRabbitEnabled, parentLogger);
+
+  if (isRabbitEnabled) {
+    logger.info('🐰 RabbitMQ is enabled');
+    const channel = await startRabbitProducer();
+    setupGracefulShutdown([
+      async (): Promise<void> => {
+        logger.info('Closing RabbitMQ connection...');
+        await channel.close();
+      },
+      async (): Promise<void> => {
+        logger.info('Closing Fastify server...');
+        await app.close();
+      },
+    ])
+  }
+  logger.info('RabbitMQ enabled status:', { isRabbitEnabled });
+  setupGracefulShutdown([
+    async (): Promise<void> => {
+      logger.info('Closing Fastify server...');
+      await app.close();
+    },
+  ])
 }
 
 main().catch((err: Error | null): never => {

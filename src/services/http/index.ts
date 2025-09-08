@@ -1,8 +1,9 @@
-import { cfg, parentLogger } from "@/infra";
+import { cfg } from "@/infra";
 import fastify, { FastifyInstance } from "fastify";
+import { Logger } from "winston";
 import { constructRoutes } from "./routes";
 
-export async function buildFastify(isAlone: boolean): Promise<FastifyInstance> {
+export async function buildFastify(isAlone: boolean, parentLogger: Logger): Promise<FastifyInstance> {
   const app = fastify();
 
   const logger = parentLogger.child({ service: 'routes' });
@@ -17,9 +18,9 @@ export async function buildFastify(isAlone: boolean): Promise<FastifyInstance> {
 }
 
 // entrypoint separado
-export async function startServer(isAlone: boolean): Promise<FastifyInstance> {
+export async function startServer(isAlone: boolean, parentLogger: Logger): Promise<FastifyInstance> {
   const logger = parentLogger.child({ service: 'http' });
-  const app = await buildFastify(isAlone);
+  const app = await buildFastify(isAlone, parentLogger);
 
   app.listen({ port: cfg.PORT }, (err: Error | null): void => {
     if (err) {
