@@ -17,7 +17,7 @@ const envSchema = z.object({
   // RabbitMQ
   RABBITMQ_URL: z.url().optional(),
   MAIN_QUEUE: z.string().default('messages'),
-
+  SKIPPED_CHARS: z.string().default('_'),
   ROUTINE_NEW_MESAGE: z.string().default('new-message'),
 
 });
