@@ -2,7 +2,6 @@ import TelegramBot, { ConstructorOptions, Message, SendMessageOptions } from 'no
 
 import { isTesting } from '@/constants';
 import { cfg, parentLogger } from '@/infra';
-import { Logger } from 'winston';
 
 const logger = parentLogger.child({ service: 'telegram' });
 const options: SendMessageOptions = { parse_mode: 'Markdown' };
@@ -58,12 +57,12 @@ export async function sendTelegramMessage(chatId: string | number, text: string,
     if (!chatId || isNaN(Number(chatId))) {
       throw new Error(`Invalid chatId: ${chatId}`);
     }
-    const log = {
-      producer: (): Logger => logger.info(`📤 PRODUCER sending message directly to chatId: ${chatId}`),
-      consumer: (): Logger => logger.info(`📥 CONSUMER processing queued message for chatId: ${chatId}`),
-      unknown: (): Logger => logger.info(`💬 Sending message to chatId: ${chatId}`)
+    const logMessage = {
+      producer: `📤 PRODUCER sending message directly to chatId: ${chatId}`,
+      consumer: `📥 CONSUMER processing queued message for chatId: ${chatId}`,
+      unknown: `💬 Sending message to chatId: ${chatId}`,
     }
-    log[cfg.serviceType || 'unknown']();
+    logger.info(logMessage[cfg.serviceType || 'unknown']);
 
     await botInstance.sendMessage(chatId, text, opts);
 
@@ -78,13 +77,13 @@ export async function sendTelegramMessage(chatId: string | number, text: string,
 export function initializeTelegramBot(): void {
   getBot();
 
-  const log = {
-    producer: (): Logger => logger.info('📤 Telegram bot initialized in PRODUCER mode (direct delivery)'),
-    consumer: (): Logger => logger.info('📥 Telegram bot initialized in CONSUMER mode (queued delivery)'),
-    unknown: (): Logger => logger.info('🤖 Telegram bot initialized')
+  const logMessage = {
+    producer: '📤 Telegram bot initialized in PRODUCER mode (direct delivery)',
+    consumer: '📥 Telegram bot initialized in CONSUMER mode (queued delivery)',
+    unknown: '🤖 Telegram bot initialized',
   }
   const serviceType = cfg.serviceType || 'unknown';
-  log[serviceType]();
+  logger.info(logMessage[serviceType]);
 }
 
 export function cleanupTelegramBot(): void {
