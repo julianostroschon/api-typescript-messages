@@ -17,10 +17,10 @@ export function setupGracefulShutdown(closeFns: Array<() => Promise<void> | void
     }
   }
   Object.entries({
+    SIGTERM: 'SIGTERM',
     SIGINT: 'SIGINT',
-    SIGTERM: 'SIGTERM'
   })
-    .map(([event, signal]) => {
+    .map(([event, signal]: [string, string]) => {
       return process.on(event, (): Promise<void> => shutdown(signal))
     })
 }

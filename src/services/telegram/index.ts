@@ -2,6 +2,7 @@ import TelegramBot, { ConstructorOptions, Message, SendMessageOptions } from 'no
 
 import { isTesting } from '@/constants';
 import { cfg, parentLogger } from '@/infra';
+import { Logger } from 'winston';
 
 const logger = parentLogger.child({ service: 'telegram' });
 const options: SendMessageOptions = { parse_mode: 'Markdown' };
@@ -58,11 +59,11 @@ export async function sendTelegramMessage(chatId: string | number, text: string,
       throw new Error(`Invalid chatId: ${chatId}`);
     }
     const log = {
-      producer: logger.info(`📤 PRODUCER sending message directly to chatId: ${chatId}`),
-      consumer: logger.info(`📥 CONSUMER processing queued message for chatId: ${chatId}`),
-      unknown: logger.info(`💬 Sending message to chatId: ${chatId}`)
+      producer: (): Logger => logger.info(`📤 PRODUCER sending message directly to chatId: ${chatId}`),
+      consumer: (): Logger => logger.info(`📥 CONSUMER processing queued message for chatId: ${chatId}`),
+      unknown: (): Logger => logger.info(`💬 Sending message to chatId: ${chatId}`)
     }
-    log[cfg.serviceType || 'unknown'];
+    log[cfg.serviceType || 'unknown']();
 
     await botInstance.sendMessage(chatId, text, opts);
 
@@ -78,19 +79,19 @@ export function initializeTelegramBot(): void {
   getBot();
 
   const log = {
-    producer: logger.info('📤 Telegram bot initialized in PRODUCER mode (direct delivery)'),
-    consumer: logger.info('📥 Telegram bot initialized in CONSUMER mode (queued delivery)'),
-    unknown: logger.info('🤖 Telegram bot initialized')
+    producer: (): Logger => logger.info('📤 Telegram bot initialized in PRODUCER mode (direct delivery)'),
+    consumer: (): Logger => logger.info('📥 Telegram bot initialized in CONSUMER mode (queued delivery)'),
+    unknown: (): Logger => logger.info('🤖 Telegram bot initialized')
   }
   const serviceType = cfg.serviceType || 'unknown';
-  log[serviceType];
+  log[serviceType]();
 }
 
 export function cleanupTelegramBot(): void {
   if (bot) {
     bot.close();
     bot = null;
-    
+
     logger.info('🧹 Telegram bot closed');
   }
 }
