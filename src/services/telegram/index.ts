@@ -2,9 +2,12 @@ import TelegramBot, { ConstructorOptions, Message, SendMessageOptions } from 'no
 
 import { isTesting } from '@/constants';
 import { cfg, parentLogger } from '@/infra';
+import { sanitizeTxt } from './utils';
 
 const logger = parentLogger.child({ service: 'telegram' });
-const options: SendMessageOptions = { parse_mode: 'Markdown' };
+const options: SendMessageOptions = {
+  parse_mode: 'Markdown'
+};
 
 let bot: TelegramBot | null = null;
 
@@ -64,7 +67,7 @@ export async function sendTelegramMessage(chatId: string | number, text: string,
     }
     logger.info(logMessage[cfg.serviceType || 'unknown']);
 
-    await botInstance.sendMessage(chatId, text, opts);
+    await botInstance.sendMessage(chatId, sanitizeTxt(text), opts);
 
     logger.info(`✅ Message sent successfully to chatId: ${chatId}`);
     return { status: 'queued' };
