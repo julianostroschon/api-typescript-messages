@@ -26,7 +26,6 @@ export async function constructRoutes(
         });
       }
       const tokenCleaned = decode<{ to: string, message: string }>(body.token)
-      console.log({ tokenCleaned })
       if (!tokenCleaned.to || !tokenCleaned.message) {
         logger.warn('Missing required fields');
         return reply.status(HTTP_STATUS.ERROR.BAD_USER_INPUT).send({
